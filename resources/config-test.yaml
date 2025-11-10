@@ -1,0 +1,49 @@
+service_name: elastic
+# 服务端口
+port: 8001
+# 运行环境
+env: test
+# 是否调试模式,调试模式会输出详细的错误信息等
+debug: true
+# 服务版本
+version: 1.0.0
+jwt_secret: eyJ0eXAiOiJKLCJhbGciOiJIUzI1N
+
+#####主要kafka,es,redis######
+#kafka_broker: 10.7.120.105:9092
+
+#elasticsearch:
+#  addrs:
+#    - https://es-test.kgtindok.com
+#  username: elastic
+#  password: uN9ilkZEXXd
+
+redis:
+  addr: 43.240.193.240:6379
+  password: 'UTXx4y23mRaa'
+  prefix: ''
+#####以下可以暂时不配置#######
+#yapi配置
+#yapi:
+#  enable: false
+#  url:
+#  token:
+#  cate_id: 0
+listening:
+  host: xhzzf.huazyk.cn
+  port: 8899
+database:
+  # 数据库-主库
+  driver: mysql
+  #如果不配置就不连接
+  dsn: hzyk:fRDtJpe3Wxhkdi26@(43.240.193.240)/hzyk?charset=utf8&parseTime=True&loc=Local
+  max_idle_conns: 10
+  max_open_conns: 50
+# rpcx配置
+rpcx:
+  enable: false
+  network: tcp
+  listen: 127.0.0.1:8010
+  #支持consul
+  discovery_addrs:
+    - 127.0.0.1:8500

@@ -1,0 +1,49 @@
+
+service_name: elastic
+# 服务端口
+port: 8001
+# 运行环境
+env: prod
+# 是否调试模式,调试模式会输出详细的错误信息等
+debug: false
+# 服务版本
+version: 1.0.0
+jwt_secret: ryJ0eXAiOiJKXCJhbGciQiJIJzI1N
+
+#####必须要配置的选项######
+kafka_broker: 8.210.73.39:19092
+
+elasticsearch:
+  addrs:
+    - http://ybes.localhost
+  username: elastic
+  password: a9dmdcQCXQur8Vz
+
+redis:
+  addr: go-redis.op8gsi.ng.0001.apse1.cache.amazonaws.com:6379
+  password: ''
+  prefix: ''
+########以下不用配置#######
+#yapi配置
+yapi:
+  enable: false
+  url: https://yapi-glehpt3b.igwkzedt.com
+  token: 6523d404f9db4b5250e1691177cbfc9da91a3592e03581b6d6f395f49a53aa5f
+  cate_id: 107
+
+database:
+  # 数据库-主库
+  driver: mysql
+  #如果不配置就不连接
+  #dsn: root:123456@(127.0.0.1)/megin?charset=utf8&parseTime=True&loc=Local
+  max_idle_conns: 10
+  max_open_conns: 50
+
+# rpcx配置
+rpcx:
+  enable: false
+  network: tcp
+  listen: 127.0.0.1:8010
+  #支持consul
+  discovery_addrs:
+    - 127.0.0.1:8500
