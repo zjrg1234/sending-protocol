@@ -58,18 +58,19 @@ func startListeningPortReceiver(host string, port string) {
 		if string(header) != "5A43" {
 			continue
 		}
-		id := rawData[10:26]        //车辆或发射机id
-		commandCode := rawData[4:6] //命令码
+		hexStr := rawData[10:26]
+		id, err := hex.DecodeString(hexStr) //车辆或发射机id
+		commandCode := rawData[4:6]         //命令码
 		// 4. 将十六进制字符串解码为字节切片
 
 		if commandCode == "10" {
-			go startForwardingReceiver(id, hexRawData, clientAddrStr)
+			go startForwardingReceiver(string(id), hexRawData, clientAddrStr)
 		}
 		if commandCode == "15" {
-			go getReceiverMessage(id, hexRawData, clientAddrStr)
+			go getReceiverMessage(string(id), hexRawData, clientAddrStr)
 		}
 		if commandCode == "16" {
-			go getReceiverHeartBeat(id, hexRawData, clientAddrStr)
+			go getReceiverHeartBeat(string(id), hexRawData, clientAddrStr)
 		}
 		fmt.Printf("获取到车辆id或发射机id: %q\n", id)
 		fmt.Printf("命令码: %q\n", commandCode)
