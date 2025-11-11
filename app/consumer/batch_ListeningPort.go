@@ -11,7 +11,6 @@ import (
 
 func startListeningPortReceiver(host string, port string) {
 	listenAddr := host + ":" + port
-	heartBeatPort := host + ":8898"
 	logger.Info("服务器开始监听端口" + listenAddr)
 
 	//http.ListenAndServeTLS 预留上上ssl证书后使用该监听
@@ -25,7 +24,7 @@ func startListeningPortReceiver(host string, port string) {
 		return
 	}
 	logger.Info("解析出ip" + ip + ":" + port)
-
+	heartBeatPort := ip + ":8898" //接收机接收心跳ip
 	udpAddr, err := net.ResolveUDPAddr("udp", ip+":"+port)
 	fmt.Println("udpAddr", udpAddr)
 	// 4. 创建 UDP 监听器
