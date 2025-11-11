@@ -11,6 +11,7 @@ import (
 
 func startListeningPortReceiver(host string, port string) {
 	listenAddr := host + ":" + port
+	heartBeatPort := host + ":8898"
 	logger.Info("服务器开始监听端口" + listenAddr)
 
 	//http.ListenAndServeTLS 预留上上ssl证书后使用该监听
@@ -70,7 +71,7 @@ func startListeningPortReceiver(host string, port string) {
 			go getReceiverMessage(string(id), hexRawData, clientAddrStr)
 		}
 		if commandCode == "16" {
-			go getReceiverHeartBeat(string(id), hexRawData, clientAddrStr)
+			go getReceiverHeartBeat(string(id), hexRawData, clientAddrStr, heartBeatPort)
 		}
 		fmt.Printf("获取到车辆id或发射机id: %q\n", id)
 		fmt.Printf("命令码: %q\n", commandCode)

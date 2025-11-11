@@ -21,8 +21,7 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 
 	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
 	transmitterHostPort := redis.Get(transmitterRedisKey)
-	fmt.Println("取出redis数据:", transmitterHostPort.Val())
-	fmt.Println("key:", transmitterRedisKey)
+	fmt.Println(transmitterId, "取出_transmitter_host_port数据:", transmitterHostPort.Val())
 	if transmitterHostPort.Val() == "" {
 		err := redis.Set(transmitterRedisKey, clientAddrStr, 5)
 		if err != nil {
@@ -33,7 +32,6 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 	log.Println("解析地址receiverHostPort：", receiverHostPort)
 
 	serverAddr, err := net.ResolveUDPAddr("udp", receiverHostPort)
-	log.Println("解析地址：", serverAddr)
 
 	conn, err := net.DialUDP("udp", nil, serverAddr)
 	if err != nil {
@@ -91,27 +89,24 @@ func getReceiverMessage(receiverId string, rawData []byte, clientAddrStr string)
 	}
 }
 
-func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr string) {
-	transmitterIdRedisKey := string(receiverId) //取到绑定的transmitter
-	transmitterId := redis.Get(transmitterIdRedisKey).Val()
-
-	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
-	transmitterHostPort := redis.Get(transmitterRedisKey).Val()
+func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr string, heartBeatPort string) {
+	//transmitterIdRedisKey := receiverId //取到绑定的transmitter
+	//transmitterId := redis.Get(transmitterIdRedisKey).Val()
 
 	receiverRedisKey := string(receiverId) + "_receiver_host_port" //端口
 	receiverHostPort := redis.Get(receiverRedisKey)
 
-	fmt.Println("取出redis数据:", receiverHostPort.Val())
-	fmt.Println("key:", receiverRedisKey)
-	if receiverHostPort.Val() == "" {
+	fmt.Println(receiverId, "取出_receiver_host_port数据:", receiverHostPort.Val())
+	if receiverHostPort.Val() != clientAddrStr {
 		err := redis.Set(receiverRedisKey, clientAddrStr, 0)
 		if err != nil {
 			logger.Error("redis塞入错误:", zap.Error(err))
 			return
 		}
 	}
+	log.Println("解析地址transmitterHostPort：", heartBeatPort)
 
-	serverAddr, err := net.ResolveUDPAddr("udp", transmitterHostPort) //发送
+	serverAddr, err := net.ResolveUDPAddr("udp", heartBeatPort) //发送
 	conn, err := net.DialUDP("udp", nil, serverAddr)
 
 	_, err = conn.Write(rawData)
