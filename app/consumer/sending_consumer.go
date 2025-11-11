@@ -110,7 +110,6 @@ func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr strin
 		}
 	}
 	log.Println("解析地址transmitterHostPort：", transmitterHostPort.Val())
-
 	serverAddr, err := net.ResolveUDPAddr("udp", transmitterHostPort.Val()) //发送
 	conn, err := net.DialUDP("udp", nil, serverAddr)
 
