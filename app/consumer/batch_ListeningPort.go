@@ -71,7 +71,7 @@ func startListeningPortReceiver(host string, port string) {
 		if commandCode == "15" {
 			go getReceiverMessage(string(id), hexRawData, clientAddrStr)
 		}
-		if commandCode == "16" {
+		if commandCode == "32" {
 			go getReceiverHeartBeat(string(id), hexRawData, clientAddrStr, heartBeatPort)
 		}
 		fmt.Printf("获取到车辆id或发射机id: %q\n", id)
