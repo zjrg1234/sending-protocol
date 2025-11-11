@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr string) {
+func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr string, clientAddrHost string) {
 	receiverIdRedisKey := transmitterId //取到绑定的receiver
 	receiverId := redis.Get(receiverIdRedisKey).Val()
 
@@ -21,9 +21,11 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 
 	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
 	transmitterHostPort := redis.Get(transmitterRedisKey)
+
+	clientAddrHostPort := clientAddrHost + ":8898"
 	fmt.Println(transmitterId, "取出_transmitter_host_port数据:", transmitterHostPort.Val())
-	if transmitterHostPort.Val() == "" {
-		err := redis.Set(transmitterRedisKey, clientAddrStr, 5)
+	if transmitterHostPort.Val() != clientAddrHostPort {
+		err := redis.Set(transmitterRedisKey, clientAddrHostPort, 5)
 		if err != nil {
 			logger.Error("redis塞入错误:", zap.Error(err))
 			return
@@ -90,23 +92,26 @@ func getReceiverMessage(receiverId string, rawData []byte, clientAddrStr string)
 }
 
 func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr string, heartBeatPort string) {
-	//transmitterIdRedisKey := receiverId //取到绑定的transmitter
-	//transmitterId := redis.Get(transmitterIdRedisKey).Val()
+	transmitterIdRedisKey := receiverId //取到绑定的transmitter
+	transmitterId := redis.Get(transmitterIdRedisKey).Val()
 
 	receiverRedisKey := string(receiverId) + "_receiver_host_port" //端口
-	receiverHostPort := redis.Get(receiverRedisKey)
+	receiverHostPort := redis.Get(receiverRedisKey).Val()
 
-	fmt.Println(receiverId, "取出_receiver_host_port数据:", receiverHostPort.Val())
-	if receiverHostPort.Val() != clientAddrStr {
+	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
+	transmitterHostPort := redis.Get(transmitterRedisKey).Val()
+
+	fmt.Println(receiverId, "取出_receiver_host_port数据:", transmitterHostPort)
+	if receiverHostPort != clientAddrStr {
 		err := redis.Set(receiverRedisKey, clientAddrStr, 0)
 		if err != nil {
 			logger.Error("redis塞入错误:", zap.Error(err))
 			return
 		}
 	}
-	log.Println("解析地址transmitterHostPort：", heartBeatPort)
+	log.Println("解析地址transmitterHostPort：", transmitterHostPort)
 
-	serverAddr, err := net.ResolveUDPAddr("udp", heartBeatPort) //发送
+	serverAddr, err := net.ResolveUDPAddr("udp", transmitterHostPort) //发送
 	conn, err := net.DialUDP("udp", nil, serverAddr)
 
 	_, err = conn.Write(rawData)

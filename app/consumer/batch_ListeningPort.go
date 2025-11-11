@@ -24,7 +24,7 @@ func startListeningPortReceiver(host string, port string) {
 		return
 	}
 	logger.Info("解析出ip" + ip + ":" + port)
-	heartBeatPort := ip + ":8898" //接收机接收心跳ip
+	heartBeatPort := ":8898" //接收机接收心跳ip
 	udpAddr, err := net.ResolveUDPAddr("udp", ip+":"+port)
 	fmt.Println("udpAddr", udpAddr)
 	// 4. 创建 UDP 监听器
@@ -42,6 +42,8 @@ func startListeningPortReceiver(host string, port string) {
 		}
 
 		clientAddrStr := clientAddr.String() // 完整地址（IP:Port，如 "192.168.1.100:54321"）
+		clientAddrHost := clientAddr.IP.String()
+		//clientAddrPort := clientAddr.Port
 
 		fmt.Printf("发送方ip加端口: %q\n", clientAddrStr) //测试使用后期注释
 
@@ -64,7 +66,7 @@ func startListeningPortReceiver(host string, port string) {
 		// 4. 将十六进制字符串解码为字节切片
 
 		if commandCode == "10" {
-			go startForwardingReceiver(string(id), hexRawData, clientAddrStr)
+			go startForwardingReceiver(string(id), hexRawData, clientAddrStr, clientAddrHost)
 		}
 		if commandCode == "15" {
 			go getReceiverMessage(string(id), hexRawData, clientAddrStr)
