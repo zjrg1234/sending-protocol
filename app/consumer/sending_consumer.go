@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"encoding/hex"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"megin/library/logger"
 	"megin/library/redis"
 	"net"
-	"strconv"
 )
 
 func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr string, clientAddrHost string) {
@@ -49,7 +47,7 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 }
 
 func getReceiverMessage(receiverId string, rawData []byte, clientAddrStr string) {
-	supplyVoltageByte := rawData[30:32]
+	//supplyVoltageByte := rawData[30:32]
 	//处理配置表
 	vehicleConfig, err := repo.GetVehicleConfig(receiverId) //车辆
 	if err != nil {
@@ -63,21 +61,21 @@ func getReceiverMessage(receiverId string, rawData []byte, clientAddrStr string)
 		logger.Error("更新车辆配置错误 :", zap.Error(err))
 		return
 	}
-	vehicle, err := repo.GetVehicle(receiverId) //车辆
-	if err != nil {
-		logger.Error("查询车辆失败:", zap.Error(err))
-		return
-	}
+	//vehicle, err := repo.GetVehicle(receiverId) //车辆
+	//if err != nil {
+	//	logger.Error("查询车辆失败:", zap.Error(err))
+	//	return
+	//}
 	//处理车辆
-	supplyVoltageStr := string(supplyVoltageByte)
-	supplyVoltageTen, err := hex.DecodeString(supplyVoltageStr) //车辆id或发射机id
-	batter := float64(supplyVoltageTen[0]) / 10.0
-	vehicle.VehicleBattery = strconv.FormatFloat(batter, 'f', 1, 64)
-	err = repo.UpdateVehicle(vehicle) //车辆
-	if err != nil {
-		logger.Error("更新车辆失败:", zap.Error(err))
-		return
-	}
+	//supplyVoltageStr := string(supplyVoltageByte)
+	//supplyVoltageTen, err := hex.DecodeString(supplyVoltageStr) //车辆id或发射机id
+	//batter := float64(supplyVoltageTen[0]) / 10.0
+	//vehicle.VehicleBattery = strconv.FormatFloat(batter, 'f', 1, 64)
+	//err = repo.UpdateVehicle(vehicle) //车辆
+	//if err != nil {
+	//	logger.Error("更新车辆失败:", zap.Error(err))
+	//	return
+	//}
 	redisKey := string(receiverId) + "_receiver_host_port" //端口
 	test := redis.Get(redisKey)
 	fmt.Println("取出redis数据:", test.Val())
@@ -101,7 +99,7 @@ func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr strin
 	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
 	transmitterHostPort := redis.Get(transmitterRedisKey)
 
-	fmt.Println(receiverId, "取出_receiver_host_port数据:", transmitterHostPort.Val())
+	fmt.Println(receiverId, "取出_receiver_host_port数据:", receiverHostPort.Val())
 	if receiverHostPort.Val() != clientAddrStr {
 		err := redis.Set(receiverRedisKey, clientAddrStr, 0)
 		if err != nil {
