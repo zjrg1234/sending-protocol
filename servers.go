@@ -188,7 +188,7 @@ func (s *Server) Start() {
 }
 
 func main() {
-	server, err := NewServer(8080)
+	server, err := NewServer(8899)
 	if err != nil {
 		log.Fatal(err)
 	}
