@@ -56,10 +56,10 @@ func (s *Server) handleMessage(data []byte, clientAddr *net.UDPAddr) {
 	rawData := strings.ToUpper(hexLower)
 	header := rawData[0:4]
 
-	if err := json.Unmarshal(data, &msg); err != nil {
-		log.Printf("解析客户端消息失败: %v", err)
-		return
-	}
+	//if err := json.Unmarshal(data, &msg); err != nil {
+	//	log.Printf("解析客户端消息失败: %v", err)
+	//	return
+	//}
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
