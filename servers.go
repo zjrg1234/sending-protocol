@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -49,6 +51,11 @@ func NewServer(port int) (*Server, error) {
 
 func (s *Server) handleMessage(data []byte, clientAddr *net.UDPAddr) {
 	var msg Messages
+	hexLower := hex.EncodeToString(data)
+	// 转大写（更易读，协议常用）
+	rawData := strings.ToUpper(hexLower)
+	header := rawData[0:4]
+
 	if err := json.Unmarshal(data, &msg); err != nil {
 		log.Printf("解析客户端消息失败: %v", err)
 		return
@@ -72,7 +79,10 @@ func (s *Server) handleMessage(data []byte, clientAddr *net.UDPAddr) {
 		}
 		log.Printf("新客户端注册: %s (%s)", msg.ClientID, clientKey)
 	}
-
+	if string(header) == "5A43" {
+		s.sendResponse(clientAddr, "welcome", "registration successful")
+		return
+	}
 	switch msg.Type {
 	case "register":
 		log.Printf("客户端注册: %s", msg.ClientID)
