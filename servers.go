@@ -15,6 +15,12 @@ type ClientInfo struct {
 	LastSeen time.Time
 	Seq      int
 }
+type Messages struct {
+	Type     string `json:"type"`
+	Data     string `json:"data"`
+	Seq      int    `json:"seq"`
+	ClientID string `json:"client_id"`
+}
 
 type Server struct {
 	conn    *net.UDPConn
@@ -42,7 +48,7 @@ func NewServer(port int) (*Server, error) {
 }
 
 func (s *Server) handleMessage(data []byte, clientAddr *net.UDPAddr) {
-	var msg Message
+	var msg Messages
 	if err := json.Unmarshal(data, &msg); err != nil {
 		log.Printf("解析客户端消息失败: %v", err)
 		return
@@ -85,7 +91,7 @@ func (s *Server) handleMessage(data []byte, clientAddr *net.UDPAddr) {
 }
 
 func (s *Server) sendResponse(addr *net.UDPAddr, msgType, data string) error {
-	response := Message{
+	response := Messages{
 		Type:     msgType,
 		Data:     data,
 		Seq:      0,
@@ -122,7 +128,7 @@ func (s *Server) broadcastToClients() {
 			}
 
 			// 发送测试数据
-			msg := Message{
+			msg := Messages{
 				Type:     "data",
 				Data:     fmt.Sprintf("服务器时间: %v", time.Now()),
 				Seq:      client.Seq + 1,
