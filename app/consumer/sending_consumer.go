@@ -20,7 +20,7 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 	transmitterRedisKey := string(transmitterId) + "_transmitter_host_port" //端口
 	transmitterHostPort := redis.Get(transmitterRedisKey)
 
-	clientAddrHostPort := clientAddrStr + ":8898"
+	clientAddrHostPort := clientAddrStr
 	fmt.Println(transmitterId, "取出_transmitter_host_port数据:", transmitterHostPort.Val())
 	if transmitterHostPort.Val() != clientAddrHostPort {
 		err := redis.Set(transmitterRedisKey, clientAddrHostPort, 0)
