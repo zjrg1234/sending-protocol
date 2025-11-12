@@ -66,7 +66,7 @@ func startListeningPortReceiver(host string, port string) {
 		// 4. 将十六进制字符串解码为字节切片
 
 		if commandCode == "10" {
-			go startForwardingReceiver(string(id), hexRawData, clientAddrStr, clientAddrHost, conn)
+			go startForwardingReceiver(string(id), hexRawData, clientAddrStr, clientAddrHost)
 		}
 		if commandCode == "15" {
 			go getReceiverMessage(string(id), hexRawData, clientAddrStr)

@@ -10,7 +10,7 @@ import (
 	"net"
 )
 
-func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr string, clientAddrHost string, conn net.Conn) {
+func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr string, clientAddrHost string) {
 	receiverIdRedisKey := transmitterId //取到绑定的receiver
 	receiverId := redis.Get(receiverIdRedisKey).Val()
 
@@ -31,9 +31,9 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 	}
 	log.Println("解析地址receiverHostPort：", receiverHostPort)
 
-	serverAddr, err := net.ResolveUDPAddr("udp", receiverHostPort)
+	serverAddr, err := net.ResolveUDPAddr("udp", clientAddrHostPort)
 
-	//conn, err := net.DialUDP("udp", nil, serverAddr)
+	conn, err := net.DialUDP("udp", nil, serverAddr)
 	if err != nil {
 		log.Printf("连接 %s 失败：%v", serverAddr.String(), err)
 		return
