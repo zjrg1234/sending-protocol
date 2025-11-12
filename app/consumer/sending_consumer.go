@@ -31,8 +31,7 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 	}
 	log.Println("解析地址receiverHostPort：", receiverHostPort)
 
-	serverAddr, err := net.ResolveUDPAddr("udp", clientAddrHostPort)
-
+	serverAddr, err := net.ResolveUDPAddr("udp", receiverHostPort)
 	conn, err := net.DialUDP("udp", nil, serverAddr)
 	if err != nil {
 		log.Printf("连接 %s 失败：%v", serverAddr.String(), err)
@@ -41,6 +40,9 @@ func startForwardingReceiver(transmitterId string, rawData []byte, clientAddrStr
 	_, err = conn.Write(rawData)
 	if err != nil {
 		log.Printf("回复客户端 %s 失败：%v", serverAddr.String(), err)
+		return
+	} else {
+		log.Printf("回复发送端 %s 成功", serverAddr.String())
 		return
 	}
 
@@ -114,6 +116,9 @@ func getReceiverHeartBeat(receiverId string, rawData []byte, clientAddrStr strin
 	_, err = conn.Write(rawData)
 	if err != nil {
 		log.Printf("回复发送端 %s 失败：%v", serverAddr.String(), err)
+		return
+	} else {
+		log.Printf("回复发送端 %s 成功", serverAddr.String())
 		return
 	}
 }
