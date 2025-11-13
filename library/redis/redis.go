@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"megin/library/logger"
@@ -13,6 +15,12 @@ import (
 type RedisClient struct {
 	rdb *redis.Client
 	ctx context.Context
+}
+type ClientInfo struct {
+	TransmitterId       string `json:"transmitter_id"`
+	ReceiverId          string `json:"receiver_id"`
+	ReceiverHostPort    string `json:"receiver_host_port"`
+	TransmitterHostPort string `json:"transmitter_host_port"`
 }
 
 var redisClient = new(RedisClient)
@@ -35,6 +43,82 @@ func Connect(addr, password string) *RedisClient {
 	}
 	return redisClient
 }
+
+// 存储链接的客户端信息
+func SaveClientInfo(clientKey string, info *ClientInfo) error {
+	key := clientKey
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	// 设置过期时间10秒钟
+	return redisClient.rdb.Set(redisClient.ctx, key, data, 0).Err()
+}
+
+// 获取客户端信息 //receiveid 或者 transmitterId
+func GetClientInfo(clientID string) (*ClientInfo, error) {
+	key := clientID
+
+	data, err := redisClient.rdb.Get(redisClient.ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var info ClientInfo
+	err = json.Unmarshal([]byte(data), &info)
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}
+
+// 删除客户端信息
+func (r *RedisClient) DeleteClientInfo(clientID string) error {
+	key := fmt.Sprintf("clientTransmitterId:%s", clientID)
+	return r.rdb.Del(redisClient.ctx, key).Err()
+}
+
+//// 清理过期客户端
+//func (r *RedisClient) CleanupExpiredClients() {
+//	clients, err := r.GetAllClients()
+//	if err != nil {
+//		return
+//	}
+//
+//	now := time.Now().Unix()
+//	for _, client := range clients {
+//		if now-client.LastSeen > 120 { // 2分钟未活跃
+//			r.DeleteClientInfo(client.TransmitterId)
+//			log.Printf("清理过期客户端: %s", client.TransmitterId)
+//		}
+//	}
+//}
+
+//// 获取所有在线客户端 先不实现
+//func (r *RedisClient) GetAllClients() ([]*ClientInfo, error) {
+//	var clients []*ClientInfo
+//
+//	keys, err := r.rdb.Keys(r.ctx, "client:*").Result()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	for _, key := range keys {
+//		data, err := r.rdb.Get(r.ctx, key).Result()
+//		if err != nil {
+//			continue
+//		}
+//
+//		var client ClientInfo
+//		if json.Unmarshal([]byte(data), &client) == nil {
+//			clients = append(clients, &client)
+//		}
+//	}
+//
+//	return clients, nil
+//}
 
 // 不过期
 func SetForever(key string, value any) error {
