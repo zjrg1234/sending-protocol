@@ -53,7 +53,7 @@ func SaveClientInfo(clientKey string, info *ClientInfo) error {
 		return err
 	}
 	// 设置过期时间60秒钟
-	return redisClient.rdb.Set(redisClient.ctx, key, data, 60*time.Second).Err()
+	return redisClient.rdb.Set(redisClient.ctx, key, data, 3*time.Second).Err()
 }
 
 // 获取客户端信息 //receiveid 或者 transmitterId
