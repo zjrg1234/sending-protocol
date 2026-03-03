@@ -235,6 +235,9 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 			logger.Error("redis塞入错误:", zap.Error(err))
 			return
 		}
+		logger.Info("未获取到开机redis缓存 重新塞入:" + receiverRedisKey)
+
+		return
 	}
 	ClientInfo.ReceiverId = receiverId
 
