@@ -168,12 +168,12 @@ func getReceiverMessage(server *ForwardServer, receiverId string, rawData []byte
 		return
 	}
 	vehicleConfig.ReceiverHostPort = clientAddrStr.String()
-
-	err = repo.UpdateVehicleConfig(vehicleConfig)
-	if err != nil {
-		logger.Error("更新车辆配置错误 :", zap.Error(err))
-		return
-	}
+	//
+	//err = repo.UpdateVehicleConfig(vehicleConfig)
+	//if err != nil {
+	//	logger.Error("更新车辆配置错误 :", zap.Error(err))
+	//	return
+	//}
 	//vehicle, err := repo.GetVehicle(receiverId) //车辆
 	//if err != nil {
 	//	logger.Error("查询车辆失败:", zap.Error(err))
@@ -222,14 +222,24 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 
 	receiverRedisKey := string(receiverId) + "_receiver" //取到绑定信息
 	ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
-	if ClientInfo == nil {
-		logger.Info("未获取到redis缓存:" + receiverRedisKey)
-		return
-	}
 
+	if ClientInfo == nil {
+		clientSetInfo := &redis.ClientInfo{
+			ReceiverId:          receiverId,
+			ReceiverHostPort:    clientAddrStr.String(),
+			TransmitterId:       "0",
+			TransmitterHostPort: "",
+		}
+		err := redis.SaveClientInfo(receiverRedisKey, clientSetInfo)
+		if err != nil {
+			logger.Error("redis塞入错误:", zap.Error(err))
+			return
+		}
+	}
 	ClientInfo.ReceiverId = receiverId
 
 	fmt.Println(receiverId, "取出TransmitterHostPort数据:", ClientInfo.TransmitterHostPort)
+
 	if ClientInfo.ReceiverHostPort != clientAddrStr.String() {
 		ClientInfo.ReceiverHostPort = clientAddrStr.String()
 		err := redis.SaveClientInfo(receiverRedisKey, ClientInfo)
