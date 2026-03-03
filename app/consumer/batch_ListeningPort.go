@@ -242,15 +242,16 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 	ClientInfo.ReceiverId = receiverId
 
 	fmt.Println(receiverId, "取出TransmitterHostPort数据:", ClientInfo.TransmitterHostPort)
+	ClientInfo.ReceiverHostPort = clientAddrStr.String()
 
-	if ClientInfo.ReceiverHostPort != clientAddrStr.String() {
-		ClientInfo.ReceiverHostPort = clientAddrStr.String()
-		err := redis.SaveClientInfo(receiverRedisKey, ClientInfo)
-		if err != nil {
-			logger.Error("redis塞入错误:", zap.Error(err))
-			return
-		}
+	//if ClientInfo.ReceiverHostPort != clientAddrStr.String() {
+	ClientInfo.ReceiverHostPort = clientAddrStr.String()
+	err = redis.SaveClientInfo(receiverRedisKey, ClientInfo)
+	if err != nil {
+		logger.Error("redis塞入错误:", zap.Error(err))
+		return
 	}
+	//}
 
 	serverAddr, err := net.ResolveUDPAddr("udp", ClientInfo.TransmitterHostPort) //发送
 	log.Println("解析地址transmitterHostPort：", serverAddr)
