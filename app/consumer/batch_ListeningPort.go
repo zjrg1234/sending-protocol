@@ -84,7 +84,7 @@ func startListeningPortReceiver(host string, port string) {
 		rawData := strings.ToUpper(hexLower)
 		fmt.Printf("\n收到来自 %s 的 UDP 数据（原始）: %s\n", clientAddr, hexRawData)
 		fmt.Println("原始十进制数据：", hexRawData, "结束\n")
-		header := rawData[0:3]
+		header := rawData[0:4]
 		if string(header) != "5A43" {
 			continue
 		}
