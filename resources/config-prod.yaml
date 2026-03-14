@@ -5,7 +5,7 @@ port: 8001
 # 运行环境
 env: prod
 # 是否调试模式,调试模式会输出详细的错误信息等
-debug: false
+debug: true
 # 服务版本
 version: 1.0.0
 jwt_secret: ryJ0eXAiOiJKXCJhbGciQiJIJzI1N
