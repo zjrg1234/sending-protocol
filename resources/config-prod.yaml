@@ -11,31 +11,34 @@ version: 1.0.0
 jwt_secret: ryJ0eXAiOiJKXCJhbGciQiJIJzI1N
 
 #####必须要配置的选项######
-kafka_broker: 8.210.73.39:19092
+#kafka_broker: 8.210.73.39:19092
 
-elasticsearch:
-  addrs:
-    - http://ybes.localhost
-  username: elastic
-  password: a9dmdcQCXQur8Vz
+#elasticsearch:
+#  addrs:
+#    - http://ybes.localhost
+#  username: elastic
+#  password: a9dmdcQCXQur8Vz
 
 redis:
-  addr: go-redis.op8gsi.ng.0001.apse1.cache.amazonaws.com:6379
-  password: ''
+  addr: 47.102.215.161:6379
+  password: 'UTXx4y23mRaa'
   prefix: ''
+listening:
+    host: xhzzf.huazyk.cn
+    port: 8899
 ########以下不用配置#######
 #yapi配置
-yapi:
-  enable: false
-  url: https://yapi-glehpt3b.igwkzedt.com
-  token: 6523d404f9db4b5250e1691177cbfc9da91a3592e03581b6d6f395f49a53aa5f
-  cate_id: 107
+#yapi:
+#  enable: false
+#  url: https://yapi-glehpt3b.igwkzedt.com
+#  token: 6523d404f9db4b5250e1691177cbfc9da91a3592e03581b6d6f395f49a53aa5f
+#  cate_id: 107
 
 database:
   # 数据库-主库
   driver: mysql
   #如果不配置就不连接
-  #dsn: root:123456@(127.0.0.1)/megin?charset=utf8&parseTime=True&loc=Local
+  dsn: zzsj:By2ctj7W5CBWD73Y@(47.102.215.161)/zzsj?charset=utf8&parseTime=True&loc=Local
   max_idle_conns: 10
   max_open_conns: 50
 
