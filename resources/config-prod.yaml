@@ -24,7 +24,7 @@ redis:
   password: 'UTXx4y23mRaa'
   prefix: ''
 listening:
-    host: xhzzf.huazyk.cn
+    host: xbbzf.zksjyk.cn
     port: 8899
 ########以下不用配置#######
 #yapi配置
