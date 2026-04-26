@@ -56,7 +56,7 @@ func startListeningPortReceiver(host string, port string) {
 			fmt.Printf("读取 UDP 数据失败: %v\n", err)
 			continue
 		}
-
+		log.Printf("[DEBUG-RAW] 源地址: %s | 原始Hex数据: %X\n", clientAddr.String(), buffer[:n])
 		fmt.Printf("发送方ip加端口: %q\n", clientAddr.String()) //测试使用后期注释
 		if buffer[0] != 0x5A || buffer[1] != 0x43 {
 			continue
