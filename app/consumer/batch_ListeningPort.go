@@ -134,14 +134,20 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 				cache.LastRedisSync = time.Now() // 重置 3 秒 TTL
 				cache.mu.Unlock()
 			}
+			if newAddr != nil {
+				_, err := server.conn.WriteToUDP(rawData, newAddr)
+				if err != nil {
+					// log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
+				}
+			}
 		}(transmitterId, clientAddrStr.String())
 		// 极速转发：不管刚才的 go func 查没查完，先用当前手里的地址把指令发给车辆！
 		// 这是保证 0.04s (25Hz) 丝滑驾驶的关键！
-		if targetAddr != nil {
-			_, err := server.conn.WriteToUDP(rawData, targetAddr)
-			if err != nil {
-				// log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
-			}
+	}
+	if targetAddr != nil {
+		_, err := server.conn.WriteToUDP(rawData, targetAddr)
+		if err != nil {
+			// log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
 		}
 	}
 
