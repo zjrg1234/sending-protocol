@@ -137,7 +137,10 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 			if newAddr != nil {
 				_, err := server.conn.WriteToUDP(rawData, newAddr)
 				if err != nil {
-					// log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
+					log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
+				} else {
+					log.Printf("回复发送端 %s 成功", newAddr.String())
+					return
 				}
 			}
 		}(transmitterId, clientAddrStr.String())
@@ -147,7 +150,10 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 	if targetAddr != nil {
 		_, err := server.conn.WriteToUDP(rawData, targetAddr)
 		if err != nil {
-			// log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
+			log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
+		} else {
+			log.Printf("回复发送端 %s 成功", targetAddr.String())
+			return
 		}
 	}
 
