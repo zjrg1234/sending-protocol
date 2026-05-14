@@ -56,8 +56,8 @@ func startListeningPortReceiver(host string, port string) {
 			fmt.Printf("读取 UDP 数据失败: %v\n", err)
 			continue
 		}
-		log.Printf("[DEBUG-RAW] 源地址: %s | 原始Hex数据: %X\n", clientAddr.String(), buffer[:n])
-		fmt.Printf("发送方ip加端口: %q\n", clientAddr.String()) //测试使用后期注释
+		//log.Printf("[DEBUG-RAW] 源地址: %s | 原始Hex数据: %X\n", clientAddr.String(), buffer[:n])
+		//fmt.Printf("发送方ip加端口: %q\n", clientAddr.String()) //测试使用后期注释
 		if buffer[0] != 0x5A || buffer[1] != 0x43 {
 			continue
 		}
@@ -75,15 +75,15 @@ func startListeningPortReceiver(host string, port string) {
 		if commandCode == 0x16 {
 			dataCopy := make([]byte, n)
 			copy(dataCopy, buffer[:n])
-			go getReceiverHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort)
+			go getReceiverHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort, buffer[5:13])
 		}
 		if commandCode == 0x14 {
 			dataCopy := make([]byte, n)
 			copy(dataCopy, buffer[:n])
 			go getTransmitterHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort)
 		}
-		fmt.Printf("获取到车辆id或发射机id: %q\n", idStr)
-		fmt.Printf("命令码: %q\n", commandCode)
+		//fmt.Printf("获取到车辆id或发射机id: %q\n", idStr)
+		//fmt.Printf("命令码: %q\n", commandCode)
 		//}
 
 	}
@@ -107,14 +107,14 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 			receiverRedisKey := string(receiverId) + "_receiver" //对应车辆配置信息 包含端口
 			ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
 			if err != nil {
-				logger.Info("未获取到redis缓存:" + receiverRedisKey)
+				//logger.Info("未获取到redis缓存:" + receiverRedisKey)
 				logger.Error("未获取到redis缓存:", zap.Error(err))
 				return
 			}
 
 			ClientInfo.TransmitterId = transmitterId
 
-			fmt.Println(transmitterId, "取出ReceiverHost数据:", ClientInfo.ReceiverHostPort)
+			//fmt.Println(transmitterId, "取出ReceiverHost数据:", ClientInfo.ReceiverHostPort)
 			//clientAddrStrSet := clientAddrStr.IP.String() + ":" + "8898"
 			clientAddrStrSet := clientAddrStr.String()
 
@@ -139,7 +139,7 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 				if err != nil {
 					log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
 				} else {
-					log.Printf("回复发送端 %s 成功", newAddr.String())
+					//log.Printf("回复发送端 %s 成功", newAddr.String())
 					return
 				}
 			}
@@ -152,7 +152,7 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 		if err != nil {
 			log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
 		} else {
-			log.Printf("回复发送端 %s 成功", targetAddr.String())
+			//log.Printf("回复发送端 %s 成功", targetAddr.String())
 			return
 		}
 	}
@@ -172,32 +172,12 @@ func getReceiverMessage(server *ForwardServer, receiverId string, rawData []byte
 		return
 	}
 	vehicleConfig.ReceiverHostPort = clientAddrStr.String()
-	//
-	//err = repo.UpdateVehicleConfig(vehicleConfig)
-	//if err != nil {
-	//	logger.Error("更新车辆配置错误 :", zap.Error(err))
-	//	return
-	//}
-	//vehicle, err := repo.GetVehicle(receiverId) //车辆
-	//if err != nil {
-	//	logger.Error("查询车辆失败:", zap.Error(err))
-	//	return
-	//}
-	//处理车辆
-	//supplyVoltageStr := string(supplyVoltageByte)
-	//supplyVoltageTen, err := hex.DecodeString(supplyVoltageStr) //车辆id或发射机id
-	//batter := float64(supplyVoltageTen[0]) / 10.0
-	//vehicle.VehicleBattery = strconv.FormatFloat(batter, 'f', 1, 64)
-	//err = repo.UpdateVehicle(vehicle) //车辆
-	//if err != nil {
-	//	logger.Error("更新车辆失败:", zap.Error(err))
-	//	return
-	//}
+
 	redisKey := string(receiverId) + "_receiver" //端口
 	clientInfo, err := redis.GetClientInfo(redisKey)
 
-	fmt.Println("取出redis数据:", clientInfo)
-	fmt.Println("key:", redisKey)
+	//fmt.Println("取出redis数据:", clientInfo)
+	//fmt.Println("key:", redisKey)
 	if clientInfo == nil {
 		clientSetInfo := &redis.ClientInfo{
 			ReceiverId:          receiverId,
@@ -222,7 +202,7 @@ func getReceiverMessage(server *ForwardServer, receiverId string, rawData []byte
 }
 
 // 接收机心跳
-func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []byte, clientAddrStr *net.UDPAddr, heartBeatPort string) {
+func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []byte, clientAddrStr *net.UDPAddr, heartBeatPort string, receiverBuff []byte) {
 
 	receiverRedisKey := string(receiverId) + "_receiver" //取到绑定信息
 	ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
@@ -245,7 +225,7 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 	}
 	ClientInfo.ReceiverId = receiverId
 
-	fmt.Println(receiverId, "取出TransmitterHostPort数据:", ClientInfo.TransmitterHostPort)
+	//fmt.Println(receiverId, "取出TransmitterHostPort数据:", ClientInfo.TransmitterHostPort)
 	ClientInfo.ReceiverHostPort = clientAddrStr.String()
 
 	//if ClientInfo.ReceiverHostPort != clientAddrStr.String() {
@@ -256,9 +236,38 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 		return
 	}
 	//}
+	// 预先分配 19 字节的切片
+	replyToReceiver := make([]byte, 19)
+
+	replyToReceiver[0] = 0x5A // 起始符 Z
+	replyToReceiver[1] = 0x43 // 起始符 C
+	replyToReceiver[2] = 0x14 // 命令码
+
+	// 流水号
+	copy(replyToReceiver[3:5], rawData[3:5])
+
+	// 直接从收到的心跳包(rawData)中，零拷贝提取 8 字节的终端 ID
+	copy(replyToReceiver[5:13], rawData[5:13])
+
+	replyToReceiver[13] = 0x00 // 数据长度高位
+	replyToReceiver[14] = 0x02 // 数据长度低位
+	replyToReceiver[15] = 0x01 // 数据块 1
+	replyToReceiver[16] = 0x01 // 数据块 2
+
+	var checksum byte = 0
+	for i := 2; i <= 16; i++ {
+		checksum ^= replyToReceiver[i]
+	}
+
+	replyToReceiver[17] = checksum // 填入算好的动态校验码
+	replyToReceiver[18] = 0x0D     // 结束符 \r
 
 	serverAddr, err := net.ResolveUDPAddr("udp", ClientInfo.TransmitterHostPort) //发送
-	log.Println("解析地址transmitterHostPort：", serverAddr)
+	//log.Println("解析地址transmitterHostPort：", serverAddr)
+	_, err = server.conn.WriteToUDP(replyToReceiver, clientAddrStr)
+	if err != nil {
+		logger.Error("向接收机回复特定 0x14 指令失败:", zap.Error(err))
+	}
 	if err != nil {
 		log.Printf("连接 %s 失败：%v", err)
 		return
@@ -268,7 +277,7 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 		log.Printf("回复发送端 %s 失败：%v", serverAddr.String(), err)
 		return
 	} else {
-		log.Printf("回复发送端 %s 成功", serverAddr.String())
+		//log.Printf("回复发送端 %s 成功", serverAddr.String())
 		return
 	}
 }
@@ -285,13 +294,13 @@ func getTransmitterHeartBeat(server *ForwardServer, transmitterId string, rawDat
 	receiverRedisKey := string(receiverId) + "_receiver" //对应车辆配置信息 包含端口
 	ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
 	if err != nil {
-		logger.Info("未获取到redis缓存:" + receiverRedisKey)
+		//logger.Info("未获取到redis缓存:" + receiverRedisKey)
 		logger.Error("未获取到redis缓存:", zap.Error(err))
 		return
 	}
 	ClientInfo.TransmitterId = transmitterId
 
-	fmt.Println(transmitterId, "取出ReceiverHost数据:", ClientInfo.ReceiverHostPort)
+	//fmt.Println(transmitterId, "取出ReceiverHost数据:", ClientInfo.ReceiverHostPort)
 	//clientAddrStrSet := clientAddrStr.IP.String() + ":" + "8898"
 	clientAddrStrSet := clientAddrStr.String()
 
@@ -314,7 +323,7 @@ func getTransmitterHeartBeat(server *ForwardServer, transmitterId string, rawDat
 		log.Printf("发送消息到 %s 失败: %v", serverAddr.String(), err)
 		return
 	} else {
-		log.Printf("回复发送端 %s 成功", serverAddr.String())
+		//log.Printf("回复发送端 %s 成功", serverAddr.String())
 		return
 	}
 }
