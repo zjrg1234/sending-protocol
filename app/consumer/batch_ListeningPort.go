@@ -77,11 +77,11 @@ func startListeningPortReceiver(host string, port string) {
 			copy(dataCopy, buffer[:n])
 			go getReceiverHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort, buffer[5:13])
 		}
-		if commandCode == 0x14 {
-			dataCopy := make([]byte, n)
-			copy(dataCopy, buffer[:n])
-			go getTransmitterHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort)
-		}
+		//if commandCode == 0x14 {
+		//	dataCopy := make([]byte, n)
+		//	copy(dataCopy, buffer[:n])
+		//	go getTransmitterHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort)
+		//}
 		//fmt.Printf("获取到车辆id或发射机id: %q\n", idStr)
 		//fmt.Printf("命令码: %q\n", commandCode)
 		//}
@@ -263,15 +263,16 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 	replyToReceiver[18] = 0x0D     // 结束符 \r
 
 	serverAddr, err := net.ResolveUDPAddr("udp", ClientInfo.TransmitterHostPort) //发送
+	if err != nil {
+		log.Printf("连接 %s 失败：%v", err)
+		return
+	}
 	//log.Println("解析地址transmitterHostPort：", serverAddr)
 	_, err = server.conn.WriteToUDP(replyToReceiver, clientAddrStr)
 	if err != nil {
 		logger.Error("向接收机回复特定 0x14 指令失败:", zap.Error(err))
 	}
-	if err != nil {
-		log.Printf("连接 %s 失败：%v", err)
-		return
-	}
+
 	_, err = server.conn.WriteToUDP(rawData, serverAddr)
 	if err != nil {
 		log.Printf("回复发送端 %s 失败：%v", serverAddr.String(), err)
