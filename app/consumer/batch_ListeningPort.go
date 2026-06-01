@@ -263,7 +263,8 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 	replyToReceiver[18] = 0x0D     // 结束符 \r
 
 	//log.Println("解析地址transmitterHostPort：", serverAddr)
-	_, err = server.conn.WriteToUDP(replyToReceiver, clientAddrStr)
+	//_, err = server.conn.WriteToUDP(replyToReceiver, clientAddrStr)
+	_, err = safeWriteUDP(server.conn, replyToReceiver, clientAddrStr)
 	if err != nil {
 		logger.Error("向接收机回复特定 0x14 指令失败:", zap.Error(err))
 	}
@@ -274,7 +275,7 @@ func getReceiverHeartBeat(server *ForwardServer, receiverId string, rawData []by
 			return
 		}
 		if serverAddr.String() == clientAddrStr.String() {
-			logger.Error("🚨 严重网络串线拦截！APP地址与车端地址完全重叠，拒绝转发！", zap.String("conflict_addr", serverAddr.String()))
+			log.Printf("🚨 严重网络串线拦截！APP地址与车端地址完全重叠，拒绝转发！", serverAddr.String())
 			return
 		}
 
@@ -335,13 +336,12 @@ func getTransmitterHeartBeat(server *ForwardServer, transmitterId string, rawDat
 	}
 }
 
-//func safeWriteUDP(conn *net.UDPConn, data []byte, addr *net.UDPAddr) { // 保留后续排查使用
-//	// 只要是发出去的包，且第三个字节是 0x16，立刻最高级别报警！
-//	if len(data) >= 3 && data[2] == 0x16 {
-//		logger.Error("🚨 抓到现行！服务器竟然主动向外发送了 0x16！",
-//			zap.String("target_addr", addr.String()),
-//			zap.ByteString("hex_data", data))
-//	}
-//
-//	conn.WriteToUDP(data, addr)
-//}
+func safeWriteUDP(conn *net.UDPConn, data []byte, addr *net.UDPAddr) (int, error) { // 保留后续排查使用
+	// 只要是发出去的包，且第三个字节是 0x16，立刻最高级别报警！
+	if len(data) >= 3 && data[2] == 0x16 {
+		log.Printf("🚨 抓到现行！服务器竟然主动向外发送了 0x16！")
+		return 0, nil
+	}
+
+	return conn.WriteToUDP(data, addr)
+}
