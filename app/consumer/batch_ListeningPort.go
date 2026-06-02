@@ -120,12 +120,12 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 
 			// 🚨 架构师防线 4：防串线物理隔离！
 			// 如果 APP 发来的数据包里的车牌号，和他在 Redis 里绑定的车牌号不一样，视为串线，立刻拦截！
-			if pDevID != receiverId {
-				logger.Error("🚨 严重串线拦截！企图把控制指令发给非绑定车辆！",
-					zap.String("packet_id", pDevID),
-					zap.String("bind_id", receiverId))
-				return
-			}
+			//if pDevID != receiverId {
+			//	logger.Error("🚨 严重串线拦截！企图把控制指令发给非绑定车辆！",
+			//		zap.String("packet_id", pDevID),
+			//		zap.String("bind_id", receiverId))
+			//	return
+			//}
 			receiverRedisKey := string(receiverId) + "_receiver" //对应车辆配置信息 包含端口
 			ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
 			if err != nil {
