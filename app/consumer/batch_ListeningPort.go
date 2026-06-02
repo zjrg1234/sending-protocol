@@ -63,18 +63,19 @@ func startListeningPortReceiver(host string, port string) {
 		}
 		commandCode := buffer[2]      //命令码
 		idStr := string(buffer[5:13]) //id
-
+		dataCopy := make([]byte, n)
+		copy(dataCopy, buffer[:n])
 		if commandCode == 0x10 {
-			startForwardingReceiver(server, idStr, buffer[:n], clientAddr)
+			startForwardingReceiver(server, idStr, dataCopy, clientAddr)
 		}
 		if commandCode == 0x15 {
-			dataCopy := make([]byte, n)
-			copy(dataCopy, buffer[:n])
+			//dataCopy := make([]byte, n)
+			//copy(dataCopy, buffer[:n])
 			go getReceiverMessage(server, idStr, dataCopy, clientAddr)
 		}
 		if commandCode == 0x16 {
-			dataCopy := make([]byte, n)
-			copy(dataCopy, buffer[:n])
+			//dataCopy := make([]byte, n)
+			//copy(dataCopy, buffer[:n])
 			go getReceiverHeartBeat(server, idStr, dataCopy, clientAddr, heartBeatPort, buffer[5:13])
 		}
 		//if commandCode == 0x14 {
@@ -92,6 +93,14 @@ func startListeningPortReceiver(host string, port string) {
 
 // 发射机转发
 func startForwardingReceiver(server *ForwardServer, transmitterId string, rawData []byte, clientAddrStr *net.UDPAddr) {
+	// 🚨 架构师防线 3：在入口处就地处决 APP 误发的 0x16 心跳！绝不浪费 CPU 和 Redis 资源
+	if rawData[2] == 0x16 {
+		logger.Warn("🚨 抓到内鬼！APP 端企图发送 0x16 心跳指令，已强行拦截！", zap.String("app_addr", clientAddrStr.String()))
+		return
+	}
+
+	packetDeviceID := string(rawData[5:13])
+
 	cacheIface, _ := SessionMap.LoadOrStore(transmitterId, &HotCache{})
 	cache := cacheIface.(*HotCache)
 
@@ -100,10 +109,23 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 	targetAddr := cache.ReceiverAddr
 	cache.mu.RUnlock()
 
-	if timeSinceLastSync > 2*time.Second {
-		go func(tId string, currentClientAddr string) {
+	if targetAddr == nil || timeSinceLastSync > 2*time.Second {
+		go func(tId string, currentClientAddr string, payload []byte, pDevID string) {
 			receiverIdRedisKey := transmitterId //取到绑定的receiver
 			receiverId := redis.Get(receiverIdRedisKey).Val()
+			if receiverId == "" {
+				log.Printf("未获取到receiverId缓存:")
+				return
+			}
+
+			// 🚨 架构师防线 4：防串线物理隔离！
+			// 如果 APP 发来的数据包里的车牌号，和他在 Redis 里绑定的车牌号不一样，视为串线，立刻拦截！
+			if pDevID != receiverId {
+				logger.Error("🚨 严重串线拦截！企图把控制指令发给非绑定车辆！",
+					zap.String("packet_id", pDevID),
+					zap.String("bind_id", receiverId))
+				return
+			}
 			receiverRedisKey := string(receiverId) + "_receiver" //对应车辆配置信息 包含端口
 			ClientInfo, err := redis.GetClientInfo(receiverRedisKey)
 			if err != nil {
@@ -133,7 +155,20 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 				cache.ReceiverAddr = newAddr
 				cache.LastRedisSync = time.Now() // 重置 3 秒 TTL
 				cache.mu.Unlock()
+
+				// 🚨 架构师防线 5：修复导致车子发抖的“幽灵双重重传”！
+				// 只有当主线程没有 targetAddr（即主线程刚刚没有发包）时，协程才负责补发这第一包。
+				// 否则主线程发了一次，这里几毫秒后又发一次，车子必发抖！
+				if targetAddr == nil {
+					// 接入高级防护罩：第四个参数传 true，代表发往接收机
+					_, err = safeWriteUDP(server.conn, payload, newAddr)
+					if err != nil {
+						log.Printf("发送消息到 %s 失败: %v", newAddr.String(), err)
+					}
+				}
+
 			}
+
 			if newAddr != nil {
 				_, err := server.conn.WriteToUDP(rawData, newAddr)
 				if err != nil {
@@ -143,7 +178,7 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 					return
 				}
 			}
-		}(transmitterId, clientAddrStr.String())
+		}(transmitterId, clientAddrStr.String(), rawData, packetDeviceID)
 		// 极速转发：不管刚才的 go func 查没查完，先用当前手里的地址把指令发给车辆！
 		// 这是保证 0.04s (25Hz) 丝滑驾驶的关键！
 	}
