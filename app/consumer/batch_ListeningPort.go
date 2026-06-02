@@ -99,7 +99,7 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 		return
 	}
 
-	//packetDeviceID := string(rawData[5:13])
+	packetDeviceID := string(rawData[5:13])
 
 	cacheIface, _ := SessionMap.LoadOrStore(transmitterId, &HotCache{})
 	cache := cacheIface.(*HotCache)
@@ -110,7 +110,7 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 	cache.mu.RUnlock()
 
 	if targetAddr == nil || timeSinceLastSync > 2*time.Second {
-		go func(tId string, currentClientAddr string, payload []byte) {
+		go func(tId string, currentClientAddr string, payload []byte, pDevID string) {
 			receiverIdRedisKey := transmitterId //取到绑定的receiver
 			receiverId := redis.Get(receiverIdRedisKey).Val()
 			if receiverId == "" {
@@ -118,8 +118,8 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 				return
 			}
 
-			//🚨 架构师防线 4：防串线物理隔离！
-			//如果 APP 发来的数据包里的车牌号，和他在 Redis 里绑定的车牌号不一样，视为串线，立刻拦截！
+			// 🚨 架构师防线 4：防串线物理隔离！
+			// 如果 APP 发来的数据包里的车牌号，和他在 Redis 里绑定的车牌号不一样，视为串线，立刻拦截！
 			//if pDevID != receiverId {
 			//	logger.Error("🚨 严重串线拦截！企图把控制指令发给非绑定车辆！",
 			//		zap.String("packet_id", pDevID),
@@ -178,14 +178,12 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 					return
 				}
 			}
-		}(transmitterId, clientAddrStr.String(), rawData)
+		}(transmitterId, clientAddrStr.String(), rawData, packetDeviceID)
 		// 极速转发：不管刚才的 go func 查没查完，先用当前手里的地址把指令发给车辆！
 		// 这是保证 0.04s (25Hz) 丝滑驾驶的关键！
 	}
 	if targetAddr != nil {
-		//_, err := server.conn.WriteToUDP(rawData, targetAddr)
-		_, err := safeWriteUDP(server.conn, rawData, targetAddr)
-
+		_, err := server.conn.WriteToUDP(rawData, targetAddr)
 		if err != nil {
 			log.Printf("发送消息到 %s 失败: %v", targetAddr.String(), err)
 		} else {
