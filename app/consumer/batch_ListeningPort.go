@@ -66,7 +66,7 @@ func startListeningPortReceiver(host string, port string) {
 		dataCopy := make([]byte, n)
 		copy(dataCopy, buffer[:n])
 		if commandCode == 0x10 {
-			startForwardingReceiver(server, idStr, dataCopy, clientAddr)
+			go startForwardingReceiver(server, idStr, dataCopy, clientAddr)
 		}
 		if commandCode == 0x15 {
 			//dataCopy := make([]byte, n)
@@ -98,9 +98,6 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 		logger.Warn("🚨 抓到内鬼！APP 端企图发送 0x16 心跳指令，已强行拦截！", zap.String("app_addr", clientAddrStr.String()))
 		return
 	}
-
-	//packetDeviceID := string(rawData[5:13])
-
 	cacheIface, _ := SessionMap.LoadOrStore(transmitterId, &HotCache{})
 	cache := cacheIface.(*HotCache)
 
@@ -117,7 +114,6 @@ func startForwardingReceiver(server *ForwardServer, transmitterId string, rawDat
 				log.Printf("未获取到receiverId缓存:")
 				return
 			}
-
 			// 🚨 架构师防线 4：防串线物理隔离！
 			// 如果 APP 发来的数据包里的车牌号，和他在 Redis 里绑定的车牌号不一样，视为串线，立刻拦截！
 			//if pDevID != receiverId {
