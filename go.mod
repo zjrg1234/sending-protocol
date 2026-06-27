@@ -12,6 +12,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/golang-module/carbon/v2 v2.2.3
 	github.com/google/go-querystring v1.0.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/micrease/gorme v1.1.3

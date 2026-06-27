@@ -55,4 +55,5 @@ func BatchHost() {
 
 	go startListeningPortReceiver(conf.Listening.Host, conf.Listening.Port)
 
+	go StartWsServer("8900")
 }
